@@ -107,7 +107,7 @@ The architecture allow for easy connectivity of data from 3rd party applications
 
 ## Setup
 
-Base on the requirements, the following components are required to be setup:
+Base on the requirements, the following components are required to be setup (More information [here][data-cortex-foundation-github]):
 
 - `API Service` - Enable the services needed to run the `Google Cloud Data Foundation`
 - `IAM` - Create a service account to run the `Google Cloud Data Foundation`
@@ -116,8 +116,6 @@ Base on the requirements, the following components are required to be setup:
 - `Cloud Composer` - Install the dependencies and setup connections required for `Cloud Composer` to run the generated dags
 - `Looker` - Setup the `BigQuery` connection and attributes required to display the visualizations
 - `Prerequisite Check` - Ensure that the environment is setup for the `Google Cloud Data Foundation` deployment
-
-More information can be found in the [data-cortex-foundation-github][data-cortex-foundation-github]
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -246,7 +244,7 @@ The following connection is required for the DAGS to run (More information [here
 
 #### Service Account Key
 
-Navigate to `IAM` > Under Service Accounts > Select the `Looker` service account > Select Keys > Select Add Key > Select Create New Key > Select *JSON* for the Key Type. This *JSON* file will be use to setup the following connection
+Navigate to `IAM` > Under Service Accounts > Select the `Looker` service account > Select Keys > Select Add Key > Select Create New Key > Select *JSON* for the Key Type. This *JSON* file will be used to setup the connection to `BigQuery`
 
 | ![data-cortex-looker-bigquery-sa-key][data-cortex-looker-bigquery-sa-key] | 
 |:--:| 
@@ -793,11 +791,12 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 - [Data Cortex Block Demand Sensing Github][data-cortex-block-demand-sensing-github]
 
 - [Data Cortex Foundation Deployment Video][ref-cortex-deployment-video]
-- [Data Cortex Demand Sensing Deployment Guide][data-cortex-demand-sensing-deployment-guide]
+- [Data Cortex Demand Sensing Deployment Guide][ref-cortex-demand-sensing-deployment-guide]
 
 - [BigQuery Create Dataset][ref-bigquery-create-dataset]
 - [Install Looker Block from Git][ref-looker-install-tool-from-git]
 - [Demand Sensing Github Issue][ref-demand-sensing-github-issue]
+
 - [Readme Template][template-resource]
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -811,14 +810,13 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [ref-looker-install-tool-from-git]: https://cloud.google.com/looker/docs/marketplace#installing_a_tool_from_a_git_url:~:text=from%20the%20Marketplace.-,Installing%20a%20tool%20from%20a%20Git%20URL,-You%20can%20also
 [ref-demand-sensing-github-issue]: https://github.com/GoogleCloudPlatform/cortex-data-foundation/issues/27
 [ref-cortex-deployment-video]: https://www.youtube.com/watch?v=pxfxOYPQw9E
+[ref-cortex-demand-sensing-deployment-guide]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf
 
 [data-cortex-overview]: https://cloud.google.com/solutions/cortex
 [data-cortex-foundation-github]: https://github.com/GoogleCloudPlatform/cortex-data-foundation
 [data-cortex-block-sap-github]: https://github.com/looker-open-source/block-cortex-sap
 [data-cortex-block-salesforce-github]: https://github.com/looker-open-source/block-cortex-salesforce
 [data-cortex-block-demand-sensing-github]: https://github.com/looker-open-source/block-cortex-demand-sensing
-
-[data-cortex-block-demand-sensing-github]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf
 
 [looker-install-tool-from-git]: https://cloud.google.com/looker/docs/marketplace#installing_a_tool_from_a_git_url
 
