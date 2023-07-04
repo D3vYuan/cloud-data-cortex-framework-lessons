@@ -28,6 +28,7 @@
         <a href="#architecture">Architecture</a>
         <ul>
             <li><a href="#data-foundation-architecture">Data Foundation Architecture</a></li>
+            <li><a href="#demand-sensing-architecture">Demand Sensing Architecture</a></li>
         </ul>
     </li>    
     <li>
@@ -46,9 +47,19 @@
         <a href="#implementation">Implementation</a>
         <ul>
             <li><a href="#data-foundation">Data Foundation</a></li>
+            <li><a href="#demand-sensing">Demand Sensing</a></li>
             <li><a href="#looker-block-sap">Looker Block (SAP)</a></li>
             <li><a href="#looker-block-salesforce">Looker Block(Salesforce)</a></li>
             <li><a href="#looker-block-demand-sensing">Looker Block (Demand Sensing)</a></li>
+        </ul>
+    </li>
+    <li>
+        <a href="#model">Model</a>
+        <ul>
+            <li><a href="#model-training">Model Training</a></li>
+            <li><a href="#model-validation">Model Validation</a></li>
+            <li><a href="#model-forecast">Model Forecast</a></li>
+            <li><a href="#model-monitoring">Model Monitoring</a></li>
         </ul>
     </li>
     <li><a href="#usage">Usage</a>
@@ -86,16 +97,29 @@ The following are some of the requirements:
 
 Base on the requirements, the following are the architectures involved in the `Google Cloud Cortex Framework`:
 - `Data Foundation Architecture` - Connect with 3rd party applications and provide quicker insights for the data
+- ``
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ### Data Foundation Architecture
 
-The architecture allow for easy connectivity of data from 3rd party applications (E.g SAP) into `BigQuery` and provide templates for data processing and visualization to allow user to have quicker insights on their data. (More information [here][data-cortex-overview])
+The architecture allow for easy connectivity of data from 3rd party applications (E.g SAP) into `BigQuery` and provide templates for data processing and visualization to allow user to have quicker insights on their data. (More information [here][data-cortex-foundation-overview])
 
-| ![data-cortex-architecture][data-cortex-architecture] | 
+| ![data-cortex-foundation-architecture][data-cortex-foundation-architecture] | 
 |:--:| 
-| *Data Cortex Architecture* |
+| *Data Cortex Foundation Architecture* |
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Demand Sensing Architecture
+
+The architecture allow for analysing the data in `BigQuery` to dervie a demand plan via machine learning models to allow user to gain new insights and highlight potential impacts in the near term. (More information [here][])
+
+| ![data-cortex-demand-sensing-architecture][data-cortex-demand-sensing-architecture] | 
+|:--:| 
+| *Data Cortex Demand Sensing Architecture* |
 
 <br/>
 
@@ -358,6 +382,7 @@ gcloud builds submit \
 Base on the requirements, the following are the tasks in the process:
 
 - `Data Foundation` - Deploy the `Google Cloud Cortex Framework` into the project
+- `Demand Sensing` - Using the data from `BigQuery` to forecast usage
 - `Looker Block (SAP)` - The dashboards for `SAP` related data
 - `Looker Block (Salesforce)` - The dashboards for `Salesforce` related data
 - `Looker Block (Demand Sensing)` - The dashboards to predict future usage
@@ -443,6 +468,17 @@ Wait for awhile and verify that the dags are now in the `Cloud Composer`
 | ![data-cortex-cloud-composer-dags][data-cortex-cloud-composer-dags] | 
 |:--:| 
 | *Cloud Composer Data Foundation Dags* |
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Demand Sensing
+
+`NOTE:` This is an optional step, however if you want to install the `Looker` block for `Demand Sensing`, the you will need to install `Demand Sensing`
+<br/>
+
+Once `Data Foundation` is installed,  you will be able to make use of the data in `BigQuery` for analytics purposes such as forcasting (More information [here][ref-cortex-demand-sensing-deployment-guide])
 
 <br/>
 
@@ -578,6 +614,44 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 |:--:| 
 | ![data-cortex-looker-demand-sensing-marketplace][data-cortex-looker-demand-sensing-marketplace] | 
 | *Looker Block (Demand Sensing) Marketplace* |
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+---
+
+<!-- Model -->
+
+## Model
+
+### Model Training
+
+(More information [here][data-cortex-model-training])
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Model Validation
+
+(More information [here][data-cortex-model-validation])
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Model Forecast
+
+(More information [here][data-cortex-model-forecast])
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+### Model Monitoring
+
+(More information [here][data-cortex-model-monitoring])
 
 <br/>
 
@@ -784,7 +858,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 
 ## Acknowledgments
 
-- [Data Cortex Overview][data-cortex-overview]
+- [Data Cortex Foundation Overview][data-cortex-foundation-overview]
 - [Data Cortex Foundation Github][data-cortex-foundation-github]
 - [Data Cortex Block SAP Github][data-cortex-block-sap-github]
 - [Data Cortex Block Salesforce Github][data-cortex-block-salesforce-github]
@@ -812,7 +886,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [ref-cortex-deployment-video]: https://www.youtube.com/watch?v=pxfxOYPQw9E
 [ref-cortex-demand-sensing-deployment-guide]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf
 
-[data-cortex-overview]: https://cloud.google.com/solutions/cortex
+[data-cortex-foundation-overview]: https://cloud.google.com/solutions/cortex
 [data-cortex-foundation-github]: https://github.com/GoogleCloudPlatform/cortex-data-foundation
 [data-cortex-block-sap-github]: https://github.com/looker-open-source/block-cortex-sap
 [data-cortex-block-salesforce-github]: https://github.com/looker-open-source/block-cortex-salesforce
@@ -820,7 +894,9 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 
 [looker-install-tool-from-git]: https://cloud.google.com/looker/docs/marketplace#installing_a_tool_from_a_git_url
 
-[data-cortex-architecture]: ./images/data-cortex-overview.png
+[data-cortex-foundation-architecture]: ./images/data-cortex-foundation-overview.png
+[data-cortex-demand-sensing-architecture]: ./images/data-cortex-demand-sensing-overview.png
+
 [data-cortex-setup-api-services]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Enable%20Required%20Components
 [data-cortex-setup-service-account-permission]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Grant%20permissions%20to%20the%20executing%20user
 [data-cortex-setup-cloud-bucket]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=iam.serviceAccountTokenCreator%22-,Create%20a%20Storage%20bucket,-A%20storage%20bucket
@@ -833,6 +909,10 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-setup-looker-user-attributes]: https://github.com/looker-open-source/block-cortex-sap#:~:text=to%20display%20data.-,User%20Attributes,-%E2%9D%95
 [data-cortex-setup-looker-locale]: https://cloud.google.com/looker/docs/model-localization#assigning_users_to_a_locale
 
+[data-cortex-model-training]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=26
+[data-cortex-model-validation]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=27
+[data-cortex-model-forecast]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=28
+[data-cortex-model-monitoring]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=31
 
 [data-cortex-cloud-build-service-account]: ./images/data-cortex-cloud-build-sa.png
 [data-cortex-cloud-build-service-account-permissions]: ./images/data-cortex-cloud-build-sa-permissions.png
