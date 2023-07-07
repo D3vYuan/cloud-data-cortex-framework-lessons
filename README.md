@@ -80,11 +80,11 @@
 
 ## About The Project
 
-This project is created to showcase how to integrate 3rd party SAS (E.g SAP) into `Google Cloud` using the `Google Cloud Cortex Framework`.
+This project is created to showcase how to integrate 3rd party SAS (E.g SAP) into `Google Cloud` using the `Data Cortex Framework`.
 
 The following are some of the requirements:
 
-- Setup `Google Cloud Cortex Framework` in `Google Cloud` Platform
+- Setup `Data Cortex Framework` in `Google Cloud` Platform
 - Setup `Looker` visualizations for data stored in `BigQuery`
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -95,7 +95,7 @@ The following are some of the requirements:
 
 ## Architecture
 
-Base on the requirements, the following are the architectures involved in the `Google Cloud Cortex Framework`:
+Base on the requirements, the following are the architectures involved in the `Data Cortex Framework`:
 - `Data Foundation Architecture` - Connect with 3rd party applications and provide quicker insights for the data
 - ``
 
@@ -163,14 +163,17 @@ gcloud services enable bigquery.googleapis.com \
 
 ### IAM
 
-Grant the following permissions to the `Cloud Build` service account (More information [here][data-cortex-setup-service-account-permission]):
+Grant the following permissions to the `Cloud Build` service account (More information [here][data-cortex-setup-service-account-permission] for `Data Cortex Foundation` and [here][data-cortex-setup-demand-sensing-service-account-permission] for `Demand Sensing`):
 - Service Usage Consumer
+- Source Repository Administrator (*Demand Sensing*)
+- Service Account Creator (*Demand Sensing*)
+- Storage Object Admin (*Demand Sensing*)
 - Storage Object Creator
-- Storage Object Viewer for the `Cloud Build` default bucket or bucket for logs
-- Object Admin for `Cloud Build` logs
-- Object Writer to the output buckets
+- Storage Object Viewer (for the `Cloud Build` default bucket or bucket for logs)
+- Object Admin (for `Cloud Build` logs)
+- Object Writer (to write to the output buckets)
 - Cloud Build Editor
-- Project Viewer or Storage Object Viewer
+- Project Viewer
 - BigQuery Data Editor
 - BigQuery Job User
 
@@ -181,6 +184,7 @@ Grant the following permissions to the `Cloud Build` service account (More infor
 <br/>
 
 `NOTE:` While the image shows that the *service account* is provided with *admin* rights, the above mentioned privileges should suffice.
+
 | ![data-cortex-cloud-build-service-account-permissions][data-cortex-cloud-build-service-account-permissions] | 
 |:--:| 
 | *Cloud Build Service Account Permissions* |
@@ -214,15 +218,17 @@ bq --location=<REGION> mk -d <TARGET_PROJECT>.<LOOKER_PDT_DATASET>
 
 ### Cloud Storage
 
-Replace *REGION*, *DAG_TEMP_BUCKET*, *LOG_BUCKET* to create buckets in the **same region** as the `BigQuery` dataset for the following usage (More information [here][data-cortex-setup-cloud-bucket]): <br/>
+Replace *REGION*, *DAG_TEMP_BUCKET*, *VERTEX_AI_BUCKET*, *LOG_BUCKET* to create buckets in the **same region** as the `BigQuery` dataset for the following usage (More information [here][data-cortex-setup-cloud-bucket]): <br/>
 `NOTE`: The region of the buckets should be the same as the datasets in `BigQuery`
 
 - `LOG_BUCKET` - Store the logs for the `Cloud Build` process
 - `DAG_TEMP_BUCKET` - Store the generated scripts generated for `Cloud Composer`
+- `VERTEX_AI_BUCKET` - Store the logs and progress of the model training for `Demand Sensing`
 
 ```bash
 gsutil mb -l <REGION> gs://<LOG_BUCKET>
 gsutil mb -l <REGION> gs://<DAG_TEMP_BUCKET>
+gsutil mb -l <REGION> gs://<VERTEX_AI_BUCKET>
 ```
 
 <br/>
@@ -359,7 +365,7 @@ There is a checker to check fo the readiness of the environment by performing th
 
 <br/>
 
-Replace *SOURCE_PROJECT*, *DAG_TEMP_BUCKET*, *LOG_BUCKET* to check for any outstanding configurations before deploying the `Google Cloud Cortex Framework` (More information [here][data-cortex-setup-prerequisite-check]):
+Replace *SOURCE_PROJECT*, *DAG_TEMP_BUCKET*, *LOG_BUCKET* to check for any outstanding configurations before deploying the `Data Cortex Framework` (More information [here][data-cortex-setup-prerequisite-check]):
 
 `NOTE: ` There a (`.`) at the end of the command. Additional [configurations][data-cortex-setup-prerequisite-parameters] can be set for the prerequisite check.
 
@@ -381,7 +387,7 @@ gcloud builds submit \
 
 Base on the requirements, the following are the tasks in the process:
 
-- `Data Foundation` - Deploy the `Google Cloud Cortex Framework` into the project
+- `Data Foundation` - Deploy the `Data Cortex Framework` into the project
 - `Demand Sensing` - Using the data from `BigQuery` to forecast usage
 - `Looker Block (SAP)` - The dashboards for `SAP` related data
 - `Looker Block (Salesforce)` - The dashboards for `Salesforce` related data
@@ -393,7 +399,7 @@ Base on the requirements, the following are the tasks in the process:
 
 #### Setup
 
-Run the following command to get the setup for `Google Cloud Cortex Framework`:
+Run the following command to get the setup for `Data Cortex Framework`:
 
 ```sh
 git clone --recurse-submodules https://github.com/GoogleCloudPlatform/cortex-data-foundation
@@ -417,7 +423,7 @@ The table mappings and intervals for the generated dags can be found in the *set
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 #### Parameters
-The following are some of the common parameters for the deployment (More information [here][data-cortex-setup-deploy-foundation-parameters]):
+The following are some of the common parameters for the deployment (More information [here][data-cortex-setup-foundation-parameters]):
 
 |#|Parameter|Description|Remarks|
 |--|--|--|--|
@@ -441,7 +447,7 @@ The following are some of the common parameters for the deployment (More informa
 
 #### Deployment
 
-Replace *SOURCE_PROJECT*, *TARGET_PROJECT*, *CDC_DATASET*, *RAW_DATASET*, *REPORT_DATASET*,*MODEL_DATASET*, *LOG_BUCKET*, *DAG_TEMP_BUCKET* to deploy `Google Cloud Cortex Framework` into the project (More information [here][data-cortex-setup-deploy-foundation]) <br/>
+Replace *SOURCE_PROJECT*, *TARGET_PROJECT*, *CDC_DATASET*, *RAW_DATASET*, *REPORT_DATASET*,*MODEL_DATASET*, *LOG_BUCKET*, *DAG_TEMP_BUCKET* to deploy `Data Cortex Framework` into the project (More information [here][data-cortex-setup-foundation]) <br/>
 `NOTE:` Run the following command in the *cortex-data-foundation* folder
 
 ```sh
@@ -480,9 +486,128 @@ Wait for awhile and verify that the dags are now in the `Cloud Composer`
 
 Once `Data Foundation` is installed,  you will be able to make use of the data in `BigQuery` for analytics purposes such as forcasting (More information [here][ref-cortex-demand-sensing-deployment-guide])
 
+#### Setup
+
+Before proceeding with the deployment, there are couple of prerequisite that we need to verify (More information [here][data-cortex-model-prerequisite]):
+- `Reporting Views` - Consists *SalesOrders*, *CusomtersMD*, *MaterialsMD*
+- `External Sources` - Consists *Trends*, *Weather*, *Holiday Calendar*
+- `SAP Client (_MANDT)` - **900** if using test data, otherwise can ignore
+- `SQL Flavor (_SQL_FLVOUR)` - **ECC** if using test data, otherwise can ignore
+
+| ![data-cortex-demand-sensing-database-setting][data-cortex-demand-sensing-database-setting] | 
+|:--:| 
+| *Data Cortex Demand Sensing Data Prerequisite* |
+
 <br/>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Parameters
+The following are some of the common parameters for the deployment (More information [here][data-cortex-setup-demand-sensing-parameters]):
+
+|#|Parameter|Description|Remarks|
+|--|--|--|--|
+|1|`_PJID_SRC`|Source Google Cloud Project|Project where the source data is located, from which the data models consume|
+|2|`_PJID_TGT`|Target Google Cloud Project|Project where the Data Foundation for SAP predefined data models was deployed|
+|3|`_DS_RAW`|Source Raw BigQuery Dataset|BigQuery dataset where the source SAP data was replicated to or where the test data was created|
+|4|`_DS_CDC`|CDC BigQuery Dataset|BigQuery dataset where the CDC processed data lands the latest available records|
+|5|`_DS_REPORTING`|Target BigQuery reporting dataset|BigQuery dataset where the Data Foundation for SAP predefined data models was deployed|
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Data
+
+Base on the following diagram, the forecasted data will be store in the respective tables
+- `PromotionCalendar`
+- `DemandPlan`
+- `AugmentedDemandPlan`
+- `AugmentedWeeklySales`
+- `DemandForecast`
+
+| ![data-cortex-demand-sensing-data-flow][data-cortex-demand-sensing-data-flow] | 
+|:--:| 
+| *Data Cortex Demand Sensing Data Flow* |
+
+<br/>
+
+If `PromotionCalendar` and `DemandPlan` is not available, it can be created with the following commands (More information [here][data-cortex-setup-demand-sensing-external-tables]):
+
+<br/>
+
+**PromotionCalendar**
+`NOTE:` Replace *{{ project_id_src }}* and *{{ dataset_cdc_process }}* with the `_PJID_SRC` and `_DS_CDC` respectively
+
+```sql
+CREATE TABLE IF NOT EXISTS `{{ project_id_src }}.{{ dataset_cdc_processed
+}}.Promotion_Calendar`
+(
+    StartDateOfWeek DATE,
+    CustomerId STRING,
+    CatalogItemId STRING,
+    IsPromo BOOLEAN,
+    DiscountPercent FLOAT64
+)
+```
+
+<br/>
+
+**DemandPlan**
+`NOTE:` Replace *{{ project_id_src }}* and *{{ dataset_cdc_process }}* with the `_PJID_SRC` and `_DS_CDC` respectively
+
+```sql
+CREATE TABLE IF NOT EXISTS `{{ project_id_src }}.{{ dataset_cdc_processed }}.Demand_Plan`
+(
+    WeekStart DATE,
+    CustomerId STRING,
+    CatalogItemId STRING,
+    DemandPlan FLOAT64
+)
+```
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Docker
+
+Run the following command to spin up a container for `Data Cortex Demand Sensing` (More information [here][data-cortex-setup-demand-sensing-setting]):
+
+```sh
+gcloud auth configure-docker gcr.io && \
+docker run -it --rm \
+marketplace.gcr.io/cortex-public/cortex-demand-sensing:latest
+```
+
+<br/>
+
+The following parameters will be prompted during the installation (More information [here][data-cortex-setup-demand-sensing]):
+
+|#|Parameter|Description|Remarks|
+|--|--|--|--|
+|1|Source GCP Project|source project where data replication and CDC processing datasets are|_PJID_SRC parameter of Data Foundation deployment|
+|2|Target GCP Project|The target project where Reporting views are (may be the same as the source depending on your deployment of the Data Foundation)| _PJID_TGT parameter of Data Foundation deployment|
+
+#### Deployment
+
+Once the docker container is spinned up, we can proceed with the installation of `Data Cortex Demand Sensing` (More information [here][data-cortex-setup-demand-sensing-deploy]):
+
+```sh
+cd /usr/src/app
+./ds-deploy
+```
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Verification
+
+After the installation, validate the installation by checking the following:
+- `Cloud Build` - Check to see that there are no errors in the `Cloud Build` process
+- `Vertex AI pipeline` - Check to see that the machine learning is triggered for the `Demand Sensing`
+- `Cloud Source Repositories` - Check that the codes are check in to the repository
+
 
 <div id="looker-block-sap-setup"></div>
 
@@ -870,6 +995,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 - [BigQuery Create Dataset][ref-bigquery-create-dataset]
 - [Install Looker Block from Git][ref-looker-install-tool-from-git]
 - [Demand Sensing Github Issue][ref-demand-sensing-github-issue]
+- [Skillsboost Lab for Data Cortex][ref-cortex-sap-skillsboost-lab]
 
 - [Readme Template][template-resource]
 
@@ -885,6 +1011,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [ref-demand-sensing-github-issue]: https://github.com/GoogleCloudPlatform/cortex-data-foundation/issues/27
 [ref-cortex-deployment-video]: https://www.youtube.com/watch?v=pxfxOYPQw9E
 [ref-cortex-demand-sensing-deployment-guide]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf
+[ref-cortex-sap-skillsboost-lab]: https://www.cloudskillsboost.google/quests/211
 
 [data-cortex-foundation-overview]: https://cloud.google.com/solutions/cortex
 [data-cortex-foundation-github]: https://github.com/GoogleCloudPlatform/cortex-data-foundation
@@ -902,13 +1029,21 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-setup-cloud-bucket]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=iam.serviceAccountTokenCreator%22-,Create%20a%20Storage%20bucket,-A%20storage%20bucket
 [data-cortex-setup-prerequisite-check]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Setup-,Check%20setup,-You%20can%20now
 [data-cortex-setup-prerequisite-parameters]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Parameters%20for%20Checker
-[data-cortex-setup-deploy-foundation]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Clone%20the%20Data%20Foundation%20repository
-[data-cortex-setup-deploy-foundation-parameters]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Gather%20the%20parameters%20for%20deployment
+
+[data-cortex-setup-foundation]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Clone%20the%20Data%20Foundation%20repository
+[data-cortex-setup-foundation-parameters]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Gather%20the%20parameters%20for%20deployment
 [data-cortex-setup-composer-connection]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#:~:text=the%20target%20table.-,Gathering%20Cloud%20Composer%20Settings,-If%20Cloud%20Composer
 [data-cortex-setup-looker-pdts]: https://github.com/looker-open-source/block-cortex-sap#:~:text=Other%20considerations
 [data-cortex-setup-looker-user-attributes]: https://github.com/looker-open-source/block-cortex-sap#:~:text=to%20display%20data.-,User%20Attributes,-%E2%9D%95
 [data-cortex-setup-looker-locale]: https://cloud.google.com/looker/docs/model-localization#assigning_users_to_a_locale
 
+[data-cortex-setup-demand-sensing-parameters]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=6
+[data-cortex-setup-demand-sensing-service-account-permission]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=7
+[data-cortex-setup-demand-sensing-external-tables]:https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=8
+[data-cortex-setup-demand-sensing-setting]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=11
+[data-cortex-setup-demand-sensing-deploy]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=15
+
+[data-cortex-model-prerequisite]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=5
 [data-cortex-model-training]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=26
 [data-cortex-model-validation]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=27
 [data-cortex-model-forecast]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=28
@@ -929,6 +1064,9 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-looker-attributes-client-id]: ./images/data-cortex-looker-attributes-client-id.png
 
 [data-cortex-data-foundation-setting]: ./images/data-cortex-data-foundation-setting.png
+
+[data-cortex-demand-sensing-database-setting]: ./images/data-cortex-demand-sensing-setting.png
+[data-cortex-demand-sensing-data-flow]: ./images/data-cortex-demand-sensing-data-flow.png
 
 [data-cortex-looker-block-sap-dashboards]: https://github.com/looker-open-source/block-cortex-sap#:~:text=What%20does%20this%20Looker%20Block%20do%20for%20me%3F
 [data-cortex-looker-block-salesforce-dashboards]: https://github.com/looker-open-source/block-cortex-salesforce#:~:text=What%20insights%20are%20possible%3F
