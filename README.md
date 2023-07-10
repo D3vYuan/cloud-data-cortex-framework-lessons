@@ -47,10 +47,10 @@
         <a href="#implementation">Implementation</a>
         <ul>
             <li><a href="#data-foundation">Data Foundation</a></li>
-            <li><a href="#demand-sensing">Demand Sensing</a></li>
             <li><a href="#looker-block-sap">Looker Block (SAP)</a></li>
             <li><a href="#looker-block-salesforce">Looker Block(Salesforce)</a></li>
-            <li><a href="#looker-block-demand-sensing">Looker Block (Demand Sensing)</a></li>
+            <li><a href="#demand-sensing">[Optional] Demand Sensing</a></li>
+            <li><a href="#looker-block-demand-sensing">[Optional] Looker Block (Demand Sensing)</a></li>
         </ul>
     </li>
     <li>
@@ -66,7 +66,7 @@
         <ul>
             <li><a href="#via-looker-block-sap">Via Looker Block (SAP)</a></li>
             <li><a href="#via-looker-block-salesforce">Via Looker Block (Salesforce)</a></li>
-            <li><a href="#via-looker-block-demand-sensing">Via Looker Block (Demand Sensing)</a></li>
+            <li><a href="#via-looker-block-demand-sensing">[Optional] Via Looker Block (Demand Sensing)</a></li>
         </ul>
     </li>
     <li><a href="#challenges">Challenges</a></li>
@@ -97,7 +97,7 @@ The following are some of the requirements:
 
 Base on the requirements, the following are the architectures involved in the `Data Cortex Framework`:
 - `Data Foundation Architecture` - Connect with 3rd party applications and provide quicker insights for the data
-- ``
+- `Demand Sensing Architecture` - Add insights for demand planning with the data ingested
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -115,7 +115,7 @@ The architecture allow for easy connectivity of data from 3rd party applications
 
 ### Demand Sensing Architecture
 
-The architecture allow for analysing the data in `BigQuery` to dervie a demand plan via machine learning models to allow user to gain new insights and highlight potential impacts in the near term. (More information [here][])
+The architecture allow for analysing the data in `BigQuery` to dervie a demand plan via machine learning models to allow user to gain new insights and highlight potential impacts in the near term. (More information [here][ref-cortex-demand-sensing-deployment-guide])
 
 | ![data-cortex-demand-sensing-architecture][data-cortex-demand-sensing-architecture] | 
 |:--:| 
@@ -177,7 +177,7 @@ Grant the following permissions to the `Cloud Build` service account (More infor
 - BigQuery Data Editor
 - BigQuery Job User
 
-| ![data-cortex-cloud-build-service-account][data-cortex-cloud-build-service-account] | 
+| ![data-cortex-deploy-data-foundation-service-account][data-cortex-deploy-data-foundation-service-account] | 
 |:--:| 
 | *Cloud Build Service Account* |
 
@@ -185,7 +185,7 @@ Grant the following permissions to the `Cloud Build` service account (More infor
 
 `NOTE:` While the image shows that the *service account* is provided with *admin* rights, the above mentioned privileges should suffice.
 
-| ![data-cortex-cloud-build-service-account-permissions][data-cortex-cloud-build-service-account-permissions] | 
+| ![data-cortex-deploy-data-foundation-service-account-permissions][data-cortex-deploy-data-foundation-service-account-permissions] | 
 |:--:| 
 | *Cloud Build Service Account Permissions* |
 
@@ -414,7 +414,7 @@ cd cortex-data-foundation
 
 The table mappings and intervals for the generated dags can be found in the *setting.yaml*
 
-| ![data-cortex-data-foundation-setting][data-cortex-data-foundation-setting] | 
+| ![data-cortex-deploy-data-foundation-setting][data-cortex-deploy-data-foundation-setting] | 
 |:--:| 
 | *Data Foundation Dag Settings* |
 
@@ -448,7 +448,8 @@ The following are some of the common parameters for the deployment (More informa
 #### Deployment
 
 Replace *SOURCE_PROJECT*, *TARGET_PROJECT*, *CDC_DATASET*, *RAW_DATASET*, *REPORT_DATASET*,*MODEL_DATASET*, *LOG_BUCKET*, *DAG_TEMP_BUCKET* to deploy `Data Cortex Framework` into the project (More information [here][data-cortex-setup-foundation]) <br/>
-`NOTE:` Run the following command in the *cortex-data-foundation* folder
+
+`NOTE:` Run the following command in the *cortex-data-foundation* folder and this will install `CDC`, `SAP`, `Salesforce` dags in `Cloud Composer` with *test data* loaded into `BigQuery`
 
 ```sh
 gcloud builds submit \
@@ -481,20 +482,24 @@ Wait for awhile and verify that the dags are now in the `Cloud Composer`
 
 ### Demand Sensing
 
-`NOTE:` This is an optional step, however if you want to install the `Looker` block for `Demand Sensing`, the you will need to install `Demand Sensing`
+`NOTE:` This is an optional step, however if you want to install the `Looker` block for `Demand Sensing`, you will need to follow this setup
 <br/>
 
 Once `Data Foundation` is installed,  you will be able to make use of the data in `BigQuery` for analytics purposes such as forcasting (More information [here][ref-cortex-demand-sensing-deployment-guide])
 
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 #### Setup
 
-Before proceeding with the deployment, there are couple of prerequisite that we need to verify (More information [here][data-cortex-model-prerequisite]):
+Before proceeding with the deployment, there are couple of prerequisite that we need to verify (More information [here][data-cortex-setup-model-prerequisite]):
 - `Reporting Views` - Consists *SalesOrders*, *CusomtersMD*, *MaterialsMD*
 - `External Sources` - Consists *Trends*, *Weather*, *Holiday Calendar*
 - `SAP Client (_MANDT)` - **900** if using test data, otherwise can ignore
 - `SQL Flavor (_SQL_FLVOUR)` - **ECC** if using test data, otherwise can ignore
 
-| ![data-cortex-demand-sensing-database-setting][data-cortex-demand-sensing-database-setting] | 
+| ![data-cortex-deploy-demand-sensing-database-setting][data-cortex-deploy-demand-sensing-database-setting] | 
 |:--:| 
 | *Data Cortex Demand Sensing Data Prerequisite* |
 
@@ -526,7 +531,7 @@ Base on the following diagram, the forecasted data will be store in the respecti
 - `AugmentedWeeklySales`
 - `DemandForecast`
 
-| ![data-cortex-demand-sensing-data-flow][data-cortex-demand-sensing-data-flow] | 
+| ![data-cortex-deploy-demand-sensing-data-flow][data-cortex-deploy-demand-sensing-data-flow] | 
 |:--:| 
 | *Data Cortex Demand Sensing Data Flow* |
 
@@ -536,7 +541,7 @@ If `PromotionCalendar` and `DemandPlan` is not available, it can be created with
 
 <br/>
 
-**PromotionCalendar**
+**PromotionCalendar** <br/>
 `NOTE:` Replace *{{ project_id_src }}* and *{{ dataset_cdc_process }}* with the `_PJID_SRC` and `_DS_CDC` respectively
 
 ```sql
@@ -553,7 +558,7 @@ CREATE TABLE IF NOT EXISTS `{{ project_id_src }}.{{ dataset_cdc_processed
 
 <br/>
 
-**DemandPlan**
+**DemandPlan** <br/>
 `NOTE:` Replace *{{ project_id_src }}* and *{{ dataset_cdc_process }}* with the `_PJID_SRC` and `_DS_CDC` respectively
 
 ```sql
@@ -570,7 +575,7 @@ CREATE TABLE IF NOT EXISTS `{{ project_id_src }}.{{ dataset_cdc_processed }}.Dem
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-#### Docker
+#### Configuration
 
 Run the following command to spin up a container for `Data Cortex Demand Sensing` (More information [here][data-cortex-setup-demand-sensing-setting]):
 
@@ -586,12 +591,33 @@ The following parameters will be prompted during the installation (More informat
 
 |#|Parameter|Description|Remarks|
 |--|--|--|--|
-|1|Source GCP Project|source project where data replication and CDC processing datasets are|_PJID_SRC parameter of Data Foundation deployment|
-|2|Target GCP Project|The target project where Reporting views are (may be the same as the source depending on your deployment of the Data Foundation)| _PJID_TGT parameter of Data Foundation deployment|
+|1|`Source GCP Project`|source project where data replication and CDC processing datasets are|`_PJID_SRC` parameter of Data Foundation deployment|
+|2|`Target GCP Project`|The target project where Reporting views are (may be the same as the source depending on your deployment of the Data Foundation)| `_PJID_TGT` parameter of Data Foundation deployment|
+|3|`Raw Landing Dataset`|BigQuery dataset where SAP data is replicated|`_DS_RAW` parameter of Data Foundation deployment|
+|4|`CDC Processed Dataset`|BigQuery dataset where the CDC processed data is|`_DS_CDC` parameter of Data Foundation Deployment <br/> `Note:` The additional external tables are expected to be found here if not using test data|
+|5|`Reporting Dataset`|The dataset for reporting used in the Data Foundation|`_DS_REPORTING` parameter of Data Foundation Deployment|
+|6|`Models Dataset`|The dataset used for ML models in the Data Foundation|`_DS_MODELS` parameter of Data Foundation Deployment <br/> `Note:` These are not Demand Sensing models|
+|7|`Vertex AI BigQuery Dataset`|This dataset is used for Vertex AI to stage processing|`Default:` *VERTEX_AI_DATA* <br/> `Note:` If it doesn’t exist, you can create one *after* configuring Demand Sensing deployment, but *before* executing the deployment|
+|8|`Data Foundation BigQuery Location`|BigQuery location (multi-region) used with Data Foundation|`_LOCATION` parameter of Data Foundation Deployment <br/> `Default:` *US* if not specified, otherwise taken from `Raw Landing Dataset` *location*|
+|9|`Vertex AI Region`|Region where the Vertex AI pipelines will run|`Note:` Must be a **single** region (e.g.us-central1), same as you used for Vertex AI bucket. Be sure to keep within the **same** multi-region location chosen for BigQuery|
+|10|`Vertex AI service account`|Service Account to run Vertex AI jobs|`Default:` *cortex-ds-vertexai-sa* in the source project.<br/>`Note:` If it doesn’t exist, you can create one *after* configuring Demand Sensing deployment, but *before* executing the deployment|
+|11|`Storage Bucket for Vertex AI`|GCS bucket for Vertex AI to store intermediate assets during model training and scoring|`Default:` Default value is a combination of the `source project id`, “*-cortex-ds-vertexai-*” string and Vertex AI *region*<br/>`Note:` If it doesn’t exist, you can create one *after* configuring Demand Sensing deployment, but *before* executing the deployment. This bucket must be created in the **region** specified as `Vertex AI Region`|
+|12|`Forecast Horizon (weeks)`|How far in the future you want to make predictions, up to 13 weeks|`Default:` 13 weeks<br/>`Note:` Leave the default if using test data|
+|13|`Context Window (weeks)`|How far back the model looks during training (and for forecasts)|`Default:` 52 weeks<br/>`Note:` Leave the default if using test data|
+|14|`Model Training Budget (hours)`|Hours that Vertex AI AutoML will spend actually training the model|`Default:` 1 hour<br/>`Note:` Leave the default if using test data|
+|15|`Deploy Test Data`||**yes** if you would like to use test data with Demand Sensing (More information [here][data-cortex-setup-demand-sensing-test-data])<br/> `NOTE:` This only works if the following parameters were used to setup `Data Foundation` <br/> *`TEST_DATA`=true,`_DEPLOY_CDC`=true,`_GEN_EXT`=true*|
+|16|`Mandant/Client`||Use **900** for if test data is populated. Otherwise, use the right client for your source SAP system|
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 #### Deployment
 
-Once the docker container is spinned up, we can proceed with the installation of `Data Cortex Demand Sensing` (More information [here][data-cortex-setup-demand-sensing-deploy]):
+`NOTE:` After finishing Demand Sensing deployment configuration, your Cloud Shell will stay in the
+context of running Demand Sensing container. `Do not` close it. You can execute all necessary CLI
+commands from there (More information [here][data-cortex-setup-demand-sensing-configuration])
+
 
 ```sh
 cd /usr/src/app
@@ -603,11 +629,47 @@ cd /usr/src/app
 
 #### Verification
 
-After the installation, validate the installation by checking the following:
-- `Cloud Build` - Check to see that there are no errors in the `Cloud Build` process
-- `Vertex AI pipeline` - Check to see that the machine learning is triggered for the `Demand Sensing`
-- `Cloud Source Repositories` - Check that the codes are check in to the repository
+**Cloud Build Logs**
 
+If deployment is *successful*, source codes will be saved into `Cloud Source Repositories` and the machine learning model training will be started in `Vertex AI` pipeline (More information [here][data-cortex-setup-demand-sensing-verification])
+
+| ![data-cortex-deploy-demand-sensing-cloud-build][data-cortex-deploy-demand-sensing-cloud-build] | 
+|:--:| 
+| *Demand Sensing Cloud Build* |
+
+<br/>
+
+**Cloud Source Repositories**
+
+If deployment is *successful*, the source code for `Demand Sensing` will be available in the repository - *https://source.cloud.google.com/SOURCE-PROJECT/cortex-demand-sensing* (More information [here][data-cortex-setup-demand-sensing-verification])
+
+| ![data-cortex-deploy-demand-sensing-source-repo][data-cortex-deploy-demand-sensing-source-repo] | 
+|:--:| 
+| *Demand Sensing Source Repository* |
+
+<br/>
+
+**Vertex AI Pipeline**
+
+If deployment is *successful*, a process will kickstart the `Vertex AI` pipeline for training a *Forecasting* model and using it to make forecast prediction (More information [here][data-cortex-setup-demand-sensing-verification])
+
+| ![data-cortex-deploy-demand-sensing-vertex-pipeline][data-cortex-deploy-demand-sensing-vertex-pipeline] | 
+|:--:| 
+| *Demand Sensing Vertex AI Pipeline* |
+
+<br/>
+
+**Demand Forecast Table**
+
+If the training is *successful*, the forecasted data will be saved into the `Demand_Forecast` table (More information [here][data-cortex-setup-demand-sensing-forecast-table])
+
+| ![data-cortex-deploy-demand-sensing-forecast-table][data-cortex-deploy-demand-sensing-forecast-table] | 
+|:--:| 
+| *Demand Sensing Forecast Table* |
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 <div id="looker-block-sap-setup"></div>
 
@@ -752,7 +814,7 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 ### Model Training
 
-(More information [here][data-cortex-model-training])
+(More information [here][data-cortex-setup-model-training])
 
 <br/>
 
@@ -760,7 +822,7 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 ### Model Validation
 
-(More information [here][data-cortex-model-validation])
+(More information [here][data-cortex-setup-model-validation])
 
 <br/>
 
@@ -768,7 +830,7 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 ### Model Forecast
 
-(More information [here][data-cortex-model-forecast])
+(More information [here][data-cortex-setup-model-forecast])
 
 <br/>
 
@@ -776,7 +838,7 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 ### Model Monitoring
 
-(More information [here][data-cortex-model-monitoring])
+(More information [here][data-cortex-setup-model-monitoring])
 
 <br/>
 
@@ -1037,20 +1099,37 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-setup-looker-user-attributes]: https://github.com/looker-open-source/block-cortex-sap#:~:text=to%20display%20data.-,User%20Attributes,-%E2%9D%95
 [data-cortex-setup-looker-locale]: https://cloud.google.com/looker/docs/model-localization#assigning_users_to_a_locale
 
+[data-cortex-setup-model-prerequisite]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=5
 [data-cortex-setup-demand-sensing-parameters]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=6
 [data-cortex-setup-demand-sensing-service-account-permission]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=7
 [data-cortex-setup-demand-sensing-external-tables]:https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=8
 [data-cortex-setup-demand-sensing-setting]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=11
+[data-cortex-setup-demand-sensing-test-data]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=12
+[data-cortex-setup-demand-sensing-configuration]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=14
 [data-cortex-setup-demand-sensing-deploy]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=15
+[data-cortex-setup-demand-sensing-cloud-build]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=16
+[data-cortex-setup-demand-sensing-verification]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=17
+[data-cortex-setup-demand-sensing-forecast-table]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=18
 
-[data-cortex-model-prerequisite]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=5
-[data-cortex-model-training]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=26
-[data-cortex-model-validation]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=27
-[data-cortex-model-forecast]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=28
-[data-cortex-model-monitoring]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=31
+[data-cortex-setup-model-training]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=26
+[data-cortex-setup-model-validation]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=27
+[data-cortex-setup-model-forecast]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=28
+[data-cortex-setup-model-monitoring]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=31
 
-[data-cortex-cloud-build-service-account]: ./images/data-cortex-cloud-build-sa.png
-[data-cortex-cloud-build-service-account-permissions]: ./images/data-cortex-cloud-build-sa-permissions.png
+[data-cortex-deploy-data-foundation-setting]: ./images/data-cortex-data-foundation-setting.png
+[data-cortex-deploy-data-foundation-service-account]: ./images/data-cortex-cloud-build-sa.png
+[data-cortex-deploy-data-foundation-service-account-permissions]: ./images/data-cortex-cloud-build-sa-permissions.png
+
+[data-cortex-deploy-demand-sensing-database-setting]: ./images/data-cortex-demand-sensing-setting.png
+[data-cortex-deploy-demand-sensing-data-flow]: ./images/data-cortex-demand-sensing-data-flow.png
+
+[data-cortex-deploy-demand-sensing-cloud-build]: ./images/data-cortex-demand-sensing-cloud-build.png
+[data-cortex-deploy-demand-sensing-source-repo]: ./images/data-cortex-demand-sensing-source-repository.png
+[data-cortex-deploy-demand-sensing-vertex-pipeline]: ./images/data-cortex-demand-sensing-vertex-pipeline.png
+[data-cortex-deploy-demand-sensing-forecast-table]: ./images/data-cortex-demand-sensing-forecast-data.png
+
+[data-cortex-looker-attributes-default-currency]: ./images/data-cortex-looker-attributes-default-currency.png
+[data-cortex-looker-attributes-client-id]: ./images/data-cortex-looker-attributes-client-id.png
 
 [data-cortex-cloud-composer-dependencies]: ./images/data-cortex-composer-dependencies.png
 [data-cortex-cloud-composer-dags]: ./images/data-cortex-composer-dags.png
@@ -1059,14 +1138,6 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-looker-bigquery-sa-key]: ./images/data-cortex-looker-bigquery-sa-key.png
 [data-cortex-looker-bigquery-connection-a]: ./images/data-cortex-looker-bigquery-connection-a.png
 [data-cortex-looker-bigquery-connection-b]: ./images/data-cortex-looker-bigquery-connection-b.png
-
-[data-cortex-looker-attributes-default-currency]: ./images/data-cortex-looker-attributes-default-currency.png
-[data-cortex-looker-attributes-client-id]: ./images/data-cortex-looker-attributes-client-id.png
-
-[data-cortex-data-foundation-setting]: ./images/data-cortex-data-foundation-setting.png
-
-[data-cortex-demand-sensing-database-setting]: ./images/data-cortex-demand-sensing-setting.png
-[data-cortex-demand-sensing-data-flow]: ./images/data-cortex-demand-sensing-data-flow.png
 
 [data-cortex-looker-block-sap-dashboards]: https://github.com/looker-open-source/block-cortex-sap#:~:text=What%20does%20this%20Looker%20Block%20do%20for%20me%3F
 [data-cortex-looker-block-salesforce-dashboards]: https://github.com/looker-open-source/block-cortex-salesforce#:~:text=What%20insights%20are%20possible%3F
