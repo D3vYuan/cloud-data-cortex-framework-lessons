@@ -57,9 +57,7 @@
         <a href="#model">Model</a>
         <ul>
             <li><a href="#model-training">Model Training</a></li>
-            <li><a href="#model-validation">Model Validation</a></li>
             <li><a href="#model-forecast">Model Forecast</a></li>
-            <li><a href="#model-monitoring">Model Monitoring</a></li>
         </ul>
     </li>
     <li><a href="#usage">Usage</a>
@@ -177,6 +175,13 @@ Grant the following permissions to the `Cloud Build` service account (More infor
 - BigQuery Data Editor
 - BigQuery Job User
 
+<br/>
+
+`NOTE:` In the event that you are using your *user account* to impersonate the `Cloud Build` service account, you will need to grant yourself the following permissions (More information [here][data-cortex-setup-service-account-impersonation]):
+- Service Account Token Creator
+
+<br/>
+
 | ![data-cortex-deploy-data-foundation-service-account][data-cortex-deploy-data-foundation-service-account] | 
 |:--:| 
 | *Cloud Build Service Account* |
@@ -189,10 +194,6 @@ Grant the following permissions to the `Cloud Build` service account (More infor
 |:--:| 
 | *Cloud Build Service Account Permissions* |
 
-<br/>
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 ### BigQuery
 
 Create the following dataset for the data migration from 3rd party application (E.g `SAP`, `Salesforce`) into `BigQuery`: <br/>
@@ -202,6 +203,7 @@ Create the following dataset for the data migration from 3rd party application (
 - `RAW_DATASET` - Used by the CDC process, this is where the replication tool lands the data from SAP
 - `REPORT_DATASET` - Name of the dataset that is accessible to end users for reporting, where views and user-facing tables are deployed
 - `MODEL_DATASET` - Name of the dataset that stages results of Machine Learning algorithms or BQML models
+- `VERTEX_AI_DATASET` - Name of the dataset that is use to store results of the pipeline
 - `LOOKER_PDT_DATASET` - Dataset that allows persistence data for Looker
 
 ```bash
@@ -209,6 +211,7 @@ bq --location=<REGION> mk -d <TARGET_PROJECT>.<CDC_DATASET>
 bq --location=<REGION> mk -d <TARGET_PROJECT>.<RAW_DATASET>
 bq --location=<REGION> mk -d <TARGET_PROJECT>.<REPORT_DATASET>
 bq --location=<REGION> mk -d <TARGET_PROJECT>.<MODEL_DATASET>
+bq --location=<REGION> mk -d <TARGET_PROJECT>.<VERTEX_AI_DATASET>
 bq --location=<REGION> mk -d <TARGET_PROJECT>.<LOOKER_PDT_DATASET>
 ```
 
@@ -524,7 +527,7 @@ The following are some of the common parameters for the deployment (More informa
 
 #### Data
 
-Base on the following diagram, the forecasted data will be store in the respective tables
+Base on the following diagram, the forecast will utilize data from the respective tables:
 - `PromotionCalendar`
 - `DemandPlan`
 - `AugmentedDemandPlan`
@@ -812,17 +815,135 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 ## Model
 
-### Model Training
+In the event that the forecasting model need to be retrained, the following data will be used (More information [here][data-cortex-setup-model-overview]):
 
-(More information [here][data-cortex-setup-model-training])
+<br/>
+
+|#|Training Data|Remarks|
+|--|--|--|
+|1|Weekly sales per product per customer location||
+|2|Weather per customer location|`Note:` uses 16-days forecast from `NOAA_GFS0P25` dataset, plus *historical weekly climate* averages up to 13 weeks ahead|
+|3|Google Trends average interest per product category per customer’s location region|`Note:` Product category is taken from a higher level of product hierarchy (T179 and T179T)|
+|4|Holiday Calendar||
+|5|Promotion Calendar with weekly promotions per product per customer||
+
+<br/>
+
+The following are some variables that need to be adjusted to finetune the model training:
+
+<br/>
+
+|#|Variable|Description|Remarks|
+|--|--|--|--|
+|1|`Forecast horizon`|how far in the future you want to make predictions, up to 13 weeks|`Default:` 13 weeks<br/>`Note:` While a longer horizon gives a great opportunity to make a forecast in advance, it reduces the overall quality of the model. Depending on your supply chain, manufacturing and delivery timing, you may want to reduce the horizon|
+|2|`Context window`|sets how far back the model looks during training (and for forecasts)|`Default:` 52 weeks<br/>`Note:` With enough historical data, you can set the context window up to 5 times the size of the forecast horizon|
+|3|`Training time budget`|how much Vertex AI AutoML will spend actually training the model|`Default:` 1 hour<br/>`Note:` . If the model quality is not great (**r^2 metric** below *0.85*), you may want to reduce the context window in half, and increase the training time up to *6* hours, then subsequently increasing the context window up to *5* times the size of `Forecast horizon`|
 
 <br/>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-### Model Validation
+### Model Training
 
-(More information [here][data-cortex-setup-model-validation])
+#### Data
+The `AugmentedWeeklySales` view, which contains weekly sales and customer location augmented with Weather, Promotion, and Trends, will be used as training data for the forecasting model (More information [here][data-cortex-setup-model-data])
+
+| ![data-cortex-model-training-data][data-cortex-model-training-data] |
+|:--:|
+| *Demand Sensing AugmentedWeeklySales Table* |
+
+<br/>
+
+The `AugmentedDemandPlan` view, which contains demand plan data augmented with Weather, Promotions, Holidays, will be used to score the trained model (More information [here][data-cortex-setup-model-validation])
+
+| ![data-cortex-model-validation-data][data-cortex-model-validation-data] |
+|:--:|
+| *Demand Sensing AugmentedDemandPlan Table* |
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Parameters
+
+The following are some of the common parameters for the model training (More information [here][data-cortex-setup-model-training]):
+
+|#|Parameter|Description|Remarks|
+|--|--|--|--|
+|1|`--model-command`|Forecasting Model command, *train*, *score* or *train_score*|`Note:` For training, use *train* or *train_score*, which performs both training and scoring.|
+|2|`--region`|Vertex AI GCP region||
+|3|`--bigquery-location`|BigQuery Location, one you used with Data Foundation||
+|4|`--pipeline-bucket`|Google Cloud Storage Bucket to use with Vertex AI when needed||
+|5|`--vertex-ai-dataset`|BigQuery dataset to use for storing intermediate data|`Note:` Vertex AI processing dataset|
+|6|`--vertex-ai-sa`|Service Account for Vertex AI to use |`Note:` Make sure you use the principal of the account, not
+its name|
+|7|`--source-project`|Source Data GCP project|`Note:` CDC Processed dataset should be there|
+|8|`--target-project`|Target GCP project|`Note:` Target Reporting dataset should be there|
+|9|`--target-reporting-dataset`|Target Reporting dataset name||
+|10|`--cdc-processed-dataset`|CDC Processed dataset name||
+|11|`--forecast-horizon-weeks`|Vertex AI Forecasting Horizon||
+|12|`--context-window-weeks`|Vertex AI Forecasting Context Window in weeks|`Default:` *52*<br/>`Note:` Optional|
+|13|`--training-node-hours`|Vertex AI Forecasting Training budget in hours|`Default:` *1*<br/>`Note:` Optional|
+|14|`--score-on-recent-model`|if present, makes the pipeline use the most recent model, not the best one||
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Training
+
+The following command can be use to retrain the models (More information [here][data-cortex-setup-model-training])
+
+```sh
+python3 src/submit_pipeline.py \
+    --model-command {train,train_score} \
+    --region REGION \
+    --bigquery-location LOCATION \
+    --pipeline-bucket PIPELINE_BUCKET \
+    --vertex-ai-dataset VERTEX_AI_DATASET
+    --vertex-ai-sa VERTEX_AI_SA \
+    --source-project SOURCE_PROJECT --target-project TARGET_PROJECT \
+    --target-reporting-dataset TARGET_REPORTING_DATASET \
+    --cdc-processed-dataset CDC_PROCESSED_DATASET \
+    --forecast-horizon-weeks FORECAST_HORIZON_WEEKS \
+    [--context-window-weeks CONTEXT_WINDOW_WEEKS] \
+    [--training-node-hours TRAINING_NODE_HOURS]
+```
+
+<br/>
+
+*Example* (for `training and scoring` model):
+```sh
+python3 src/submit_pipeline.py \
+    --model-command train_score \
+    --region us-central1 \
+    --bigquery-location US \
+    --pipeline-bucket bucket_vertex_ai \
+    --vertex-ai-dataset cortex_ai \
+    --vertex-ai-sa cortex-ds-vertexai-sa@<PROJECT_ID>.iam.gserviceaccount.com \
+    --source-project <SOURCE_PROJECT_ID> \
+    --target-project <DEST_PROJECT_ID> \
+    --target-reporting-dataset cortex_reporting \
+    --cdc-processed-dataset cortex_cdc \
+    --forecast-horizon-weeks 14 \
+    --context-window-weeks 52 \
+    --training-node-hours 1
+```
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Validation
+
+Once the model is trained, it will be stored in the `Model Registry` in `Vertex AI` (More information [here][data-cortex-setup-model-validation])
+
+| ![data-cortex-model-training-validation-a][data-cortex-model-training-validation-a] |
+|:--:|
+
+| ![data-cortex-model-training-validation-b][data-cortex-model-training-validation-b] |
+|:--:|
+| *Demand Sensing Model Validation* |
 
 <br/>
 
@@ -830,15 +951,74 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 ### Model Forecast
 
-(More information [here][data-cortex-setup-model-forecast])
+The following command can be use to evaluate the models (More information [here][data-cortex-setup-model-forecast]):
+
+`NOTE:` The following is the expected behaviour when the command is executed 
+- `Demand_Forecast` table will be truncated with each successful forecast
+- Forecast is always made with best model as evaulated by r^2 (r-squared) metric
+
+<br/>
+
+```sh
+python3 src/submit_pipeline.py \
+    --model-command {score,train_score} \
+    --region REGION \
+    --bigquery-location LOCATION \
+    --pipeline-bucket PIPELINE_BUCKET \
+    --vertex-ai-dataset VERTEX_AI_DATASET
+    --vertex-ai-sa VERTEX_AI_SA \
+    --source-project SOURCE_PROJECT --target-project TARGET_PROJECT \
+    --target-reporting-dataset TARGET_REPORTING_DATASET \
+    --cdc-processed-dataset CDC_PROCESSED_DATASET \
+    --forecast-horizon-weeks FORECAST_HORIZON_WEEKS \
+    [--context-window-weeks CONTEXT_WINDOW_WEEKS] \
+    [--training-node-hours TRAINING_NODE_HOURS] \
+    [--score-on-recent-model]
+```
+
+<br/>
+
+*Example* (for `scoring` model):
+```sh
+python3 src/submit_pipeline.py \
+    --model-command score \
+    --region us-central1 \
+    --bigquery-location US \
+    --pipeline-bucket bucket_vertex_ai \
+    --vertex-ai-dataset cortex_ai \
+    --vertex-ai-sa cortex-ds-vertexai-sa@<PROJECT_ID>.iam.gserviceaccount.com \
+    --source-project <SOURCE_PROJECT_ID> \
+    --target-project <DEST_PROJECT_ID> \
+    --target-reporting-dataset cortex_reporting \
+    --cdc-processed-dataset cortex_cdc \
+    --forecast-horizon-weeks 14 \
+    --context-window-weeks 52 \
+    --training-node-hours 1
+```
 
 <br/>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-### Model Monitoring
+#### Troubleshooting
+In any event that the *scoring* is unsuccessful, the *errors* will be written to the `VERTEX_AI_DATASET`
 
-(More information [here][data-cortex-setup-model-monitoring])
+| ![data-cortex-model-training-troubleshooting][data-cortex-model-training-troubleshooting] |
+|:--:|
+| *Demand Sensing Model Troubleshooting* |
+
+<br/>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+#### Verification
+
+Otherwise, if the *scoring* is successful, the results will be written to the `Demand_Forecast` table
+
+
+| ![data-cortex-deploy-demand-sensing-forecast-table][data-cortex-deploy-demand-sensing-forecast-table] |
+|:--:|
+| *Demand Sensing Model Forecast* |
 
 <br/>
 
@@ -1088,6 +1268,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 
 [data-cortex-setup-api-services]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Enable%20Required%20Components
 [data-cortex-setup-service-account-permission]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Grant%20permissions%20to%20the%20executing%20user
+[data-cortex-setup-service-account-impersonation]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#optional-create-a-service-account-for-deployment-with-impersonation:~:text=%5BOptional%5D%20Create%20a%20Service%20Account%20for%20deployment%20with%20impersonation
 [data-cortex-setup-cloud-bucket]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=iam.serviceAccountTokenCreator%22-,Create%20a%20Storage%20bucket,-A%20storage%20bucket
 [data-cortex-setup-prerequisite-check]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Setup-,Check%20setup,-You%20can%20now
 [data-cortex-setup-prerequisite-parameters]: https://github.com/GoogleCloudPlatform/cortex-data-foundation#enable-required-components:~:text=Parameters%20for%20Checker
@@ -1111,8 +1292,10 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-setup-demand-sensing-verification]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=17
 [data-cortex-setup-demand-sensing-forecast-table]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=18
 
+[data-cortex-setup-model-overview]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=24
+[data-cortex-setup-model-data]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=25
 [data-cortex-setup-model-training]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=26
-[data-cortex-setup-model-validation]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=27
+[data-cortex-setup-model-validation]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=28
 [data-cortex-setup-model-forecast]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=28
 [data-cortex-setup-model-monitoring]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf#page=31
 
@@ -1163,3 +1346,9 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 [data-cortex-looker-sap-customization]: ./images/data-cortex-looker-sap-customization.png
 [data-cortex-looker-salesforce-customization]: ./images/data-cortex-looker-salesforce-customization.png
 [data-cortex-looker-demand-sensing-customization]: ./images/data-cortex-looker-demand-sensing-customization.png
+
+[data-cortex-model-training-data]: ./images/data-cortex-demand-sensing-model-data.png
+[data-cortex-model-training-validation-a]: ./images/data-cortex-demand-sensing-model-validation-a.png
+[data-cortex-model-training-validation-b]: ./images/data-cortex-demand-sensing-model-validation-b.png
+[data-cortex-model-validation-data]: ./images/data-cortex-demand-sensing-validation-data.png
+[data-cortex-model-training-troubleshooting]: ./images/data-cortex-demand-sensing-troubleshooting.png
