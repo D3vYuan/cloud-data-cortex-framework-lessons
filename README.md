@@ -326,7 +326,7 @@ Navigate to `Looker` > Under Admin > Users > Users Attributes, add the following
 #### default_value_currency_required
 
 Enter the following for the `default_value_currency_required` defintion:
-- `Name` - `default_value_currency_required`
+- `Name` - *default_value_currency_required*
 - `Label` - Default Value Currency Required
 - `Data Type` - String
 - `User Access` - View
@@ -343,7 +343,7 @@ Enter the following for the `default_value_currency_required` defintion:
 #### client_id_rep
 
 Enter the following for the `client_id_rep` defintion:
-- `Name` - `client_id_rep`
+- `Name` - *client_id_rep*
 - `Label` - Default Value for Client Id Rep Required
 - `Data Type` - String
 - `User Access` - View
@@ -359,7 +359,7 @@ Enter the following for the `client_id_rep` defintion:
 
 ### Prerequisite Check
 
-There is a checker to check fo the readiness of the environment by performing the following actions:
+There is a checker to examine the readiness of the environment by performing the following actions:
 - List the given bucket
 - Write to the bucket
 - Create a BQ dataset
@@ -370,7 +370,9 @@ There is a checker to check fo the readiness of the environment by performing th
 
 Replace *SOURCE_PROJECT*, *DAG_TEMP_BUCKET*, *LOG_BUCKET* to check for any outstanding configurations before deploying the `Data Cortex Framework` (More information [here][data-cortex-setup-prerequisite-check]):
 
-`NOTE: ` There a (`.`) at the end of the command. Additional [configurations][data-cortex-setup-prerequisite-parameters] can be set for the prerequisite check.
+<br/>
+
+`NOTE:` There a (`.`) at the end of the command. Additional [configurations][data-cortex-setup-prerequisite-parameters] can be set for the prerequisite check.
 
 ```sh
 git clone https://github.com/lsubatin/mando-checker
@@ -450,9 +452,11 @@ The following are some of the common parameters for the deployment (More informa
 
 #### Deployment
 
-Replace *SOURCE_PROJECT*, *TARGET_PROJECT*, *CDC_DATASET*, *RAW_DATASET*, *REPORT_DATASET*,*MODEL_DATASET*, *LOG_BUCKET*, *DAG_TEMP_BUCKET* to deploy `Data Cortex Framework` into the project (More information [here][data-cortex-setup-foundation]) <br/>
+Replace *SOURCE_PROJECT*, *TARGET_PROJECT*, *CDC_DATASET*, *RAW_DATASET*, *REPORT_DATASET*,*MODEL_DATASET*, *LOG_BUCKET*, *DAG_TEMP_BUCKET* in the following command to deploy Data Cortex Framework` into the project(More information [here][data-cortex-setup-foundation]) <br/>
 
-`NOTE:` Run the following command in the *cortex-data-foundation* folder and this will install `CDC`, `SAP`, `Salesforce` dags in `Cloud Composer` with *test data* loaded into `BigQuery`
+NOTE: Run the command from the `cortex-data-foundation` folder. If the `_TEST_DATA` is set to *false*, you will need to create the corresponding table in `_DS_RAW` and `_DS_CDC` on your own.
+
+<br/>
 
 ```sh
 gcloud builds submit \
@@ -466,14 +470,14 @@ gcloud builds submit \
 
 #### Dag Migration
 
-After successful deployment, you can migrate the generated dags in the `DAG_TEMP_BUCKET` into the `Cloud Composer` dag folder (`DAG_BUCKET`)
+After successful deployment, you can migrate the generated dags into the `Cloud Composer` dag folder 
 
 ```sh
 gsutil cp -r  gs://<DAG_TEMP_BUCKET>/dags* gs://<DAG_BUCKET>/dags
 gsutil cp -r  gs://<DAG_TEMP_BUCKET>/data/* gs://<DAG_BUCKET>/data/
 ```
 
-Wait for awhile and verify that the dags are now in the `Cloud Composer`
+Navigate to `Cloud Composer` and verify that the dags have been created.
 
 | ![data-cortex-cloud-composer-dags][data-cortex-cloud-composer-dags] | 
 |:--:| 
@@ -485,20 +489,18 @@ Wait for awhile and verify that the dags are now in the `Cloud Composer`
 
 ### Demand Sensing
 
+Once `Data Foundation` is installed,  you will be able to make use of the data in `BigQuery` for analytics purposes such as forcasting (More information [here][ref-cortex-demand-sensing-deployment-guide]) <br/>
+
 `NOTE:` This is an optional step, however if you want to install the `Looker` block for `Demand Sensing`, you will need to follow this setup
-<br/>
-
-Once `Data Foundation` is installed,  you will be able to make use of the data in `BigQuery` for analytics purposes such as forcasting (More information [here][ref-cortex-demand-sensing-deployment-guide])
-
 <br/>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 #### Setup
 
-Before proceeding with the deployment, there are couple of prerequisite that we need to verify (More information [here][data-cortex-setup-model-prerequisite]):
-- `Reporting Views` - Consists *SalesOrders*, *CusomtersMD*, *MaterialsMD*
-- `External Sources` - Consists *Trends*, *Weather*, *Holiday Calendar*
+Before proceeding with the deployment, there are some prerequisites to verify (More information [here][data-cortex-setup-model-prerequisite]):
+- `Reporting Views` - View *SalesOrders*, *CusomtersMD*, *MaterialsMD* exists
+- `External Sources` - Table *Trends*, *Weather*, *Holiday Calendar* exists
 - `SAP Client (_MANDT)` - **900** if using test data, otherwise can ignore
 - `SQL Flavor (_SQL_FLVOUR)` - **ECC** if using test data, otherwise can ignore
 
@@ -590,7 +592,7 @@ marketplace.gcr.io/cortex-public/cortex-demand-sensing:latest
 
 <br/>
 
-The following parameters will be prompted during the installation (More information [here][data-cortex-setup-demand-sensing]):
+The following parameters will be prompted during the installation:
 
 |#|Parameter|Description|Remarks|
 |--|--|--|--|
@@ -644,11 +646,12 @@ If deployment is *successful*, source codes will be saved into `Cloud Source Rep
 
 **Cloud Source Repositories**
 
-If deployment is *successful*, the source code for `Demand Sensing` will be available in the repository - *https://source.cloud.google.com/SOURCE-PROJECT/cortex-demand-sensing* (More information [here][data-cortex-setup-demand-sensing-verification])
+If deployment is *successful*, the source code for `Demand Sensing` will be available in the `Cloud Source Repository` (More information [here][data-cortex-setup-demand-sensing-verification])
+<br/>
 
 | ![data-cortex-deploy-demand-sensing-source-repo][data-cortex-deploy-demand-sensing-source-repo] | 
 |:--:| 
-| *Demand Sensing Source Repository* |
+| *Demand Sensing Cloud Source Repository* |
 
 <br/>
 
@@ -679,8 +682,6 @@ If the training is *successful*, the forecasted data will be saved into the `Dem
 ### Looker Block (SAP)
 
 To install the `Looker` block for `SAP`, we will need to install using its [repository][data-cortex-block-sap-github]
-
-<br/>
 
 <div id="looker-block-sap-hash"></div>
 
@@ -725,8 +726,6 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 
 To install the `Looker` block for `Salesforce`, we will need to install using its [repository][data-cortex-block-salesforce-github]
 
-<br/>
-
 <div id="looker-block-salesforce-hash"></div>
 
 #### Looker Block Hash
@@ -769,8 +768,6 @@ Navigate to `Looker` > Select the *marketplace* icon > Select Manage > Click the
 ### Looker Block (Demand Sensing)
 
 To install the `Looker` block for `Demand Sensing`, we will need to install using its [repository][data-cortex-block-demand-sensing-github]
-
-<br/>
 
 <div id="looker-block-demand-sensing-hash"></div>
 
@@ -875,8 +872,7 @@ The following are some of the common parameters for the model training (More inf
 |3|`--bigquery-location`|BigQuery Location, one you used with Data Foundation||
 |4|`--pipeline-bucket`|Google Cloud Storage Bucket to use with Vertex AI when needed||
 |5|`--vertex-ai-dataset`|BigQuery dataset to use for storing intermediate data|`Note:` Vertex AI processing dataset|
-|6|`--vertex-ai-sa`|Service Account for Vertex AI to use |`Note:` Make sure you use the principal of the account, not
-its name|
+|6|`--vertex-ai-sa`|Service Account for Vertex AI to use |`Note:` Make sure you use the principal of the account, not its name|
 |7|`--source-project`|Source Data GCP project|`Note:` CDC Processed dataset should be there|
 |8|`--target-project`|Target GCP project|`Note:` Target Reporting dataset should be there|
 |9|`--target-reporting-dataset`|Target Reporting dataset name||
@@ -1213,7 +1209,7 @@ Encountered the error messages  - There can be no more than 64 labels attached t
 
 **Resolution**
 
-Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve the issue by modifying the source code *forcasting_pipeline.py* The issue is most likely cause by additional labels that hinder the model training process.
+Seek help from [github][ref-cortex-demand-sensing-github-issue] and was able to resolve the issue by modifying the source code *forcasting_pipeline.py* The issue is most likely cause by additional labels that hinder the model training process.
 
 <br/>
 
@@ -1236,7 +1232,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 
 - [BigQuery Create Dataset][ref-bigquery-create-dataset]
 - [Install Looker Block from Git][ref-looker-install-tool-from-git]
-- [Demand Sensing Github Issue][ref-demand-sensing-github-issue]
+- [Demand Sensing Github Issue][ref-cortex-demand-sensing-github-issue]
 - [Skillsboost Lab for Data Cortex][ref-cortex-sap-skillsboost-lab]
 
 - [Readme Template][template-resource]
@@ -1250,7 +1246,7 @@ Seek help from [github][ref-demand-sensing-github-issue] and was able to resolve
 
 [ref-bigquery-create-dataset]: https://cloud.google.com/bigquery/docs/datasets#bq
 [ref-looker-install-tool-from-git]: https://cloud.google.com/looker/docs/marketplace#installing_a_tool_from_a_git_url:~:text=from%20the%20Marketplace.-,Installing%20a%20tool%20from%20a%20Git%20URL,-You%20can%20also
-[ref-demand-sensing-github-issue]: https://github.com/GoogleCloudPlatform/cortex-data-foundation/issues/27
+[ref-cortex-demand-sensing-github-issue]: https://github.com/GoogleCloudPlatform/cortex-data-foundation/issues/27
 [ref-cortex-deployment-video]: https://www.youtube.com/watch?v=pxfxOYPQw9E
 [ref-cortex-demand-sensing-deployment-guide]: https://storage.googleapis.com/cortex-public-documents/Cortex%20Demand%20Sensing%20-%20User%20Guide.pdf
 [ref-cortex-sap-skillsboost-lab]: https://www.cloudskillsboost.google/quests/211
